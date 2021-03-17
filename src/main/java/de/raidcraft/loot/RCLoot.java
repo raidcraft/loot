@@ -1,8 +1,8 @@
-package de.raidcraft.template;
+package de.raidcraft.loot;
 
 import co.aikar.commands.PaperCommandManager;
-import de.raidcraft.template.commands.AdminCommands;
-import de.raidcraft.template.commands.PlayerCommands;
+import de.raidcraft.loot.commands.AdminCommands;
+import de.raidcraft.loot.commands.PlayerCommands;
 import io.ebean.Database;
 import kr.entree.spigradle.annotations.PluginMain;
 import lombok.AccessLevel;
@@ -18,11 +18,11 @@ import org.bukkit.plugin.java.JavaPluginLoader;
 import java.io.File;
 
 @PluginMain
-public class PluginTemplate extends JavaPlugin {
+public class RCLoot extends JavaPlugin {
 
     @Getter
     @Accessors(fluent = true)
-    private static PluginTemplate instance;
+    private static RCLoot instance;
 
     private Database database;
     @Getter
@@ -34,11 +34,11 @@ public class PluginTemplate extends JavaPlugin {
     @Getter
     private static boolean testing = false;
 
-    public PluginTemplate() {
+    public RCLoot() {
         instance = this;
     }
 
-    public PluginTemplate(
+    public RCLoot(
             JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
         super(loader, description, dataFolder, file);
         instance = this;

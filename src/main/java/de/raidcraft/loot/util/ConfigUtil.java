@@ -1,4 +1,4 @@
-package de.raidcraft.template.util;
+package de.raidcraft.loot.util;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -17,8 +17,8 @@ public class ConfigUtil {
 
         Path relativePath = base.relativize(file.toPath());
         return relativePath.toString()
-                .replace("/", ".")
-                .replace("\\", ".")
+                .replace("/", "-")
+                .replace("\\", "-")
                 .toLowerCase()
                 .replace(".yml", "")
                 .replace(".yaml", "");

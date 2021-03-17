@@ -1,4 +1,4 @@
-package de.raidcraft.template.events;
+package de.raidcraft.loot.events;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -8,7 +8,7 @@ import org.bukkit.event.HandlerList;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public abstract class RCTemplateEvent extends Event {
+public abstract class RCLootEvent extends Event {
     @Getter
     private static final HandlerList handlerList = new HandlerList();
 }
