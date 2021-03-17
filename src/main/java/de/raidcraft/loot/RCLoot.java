@@ -16,6 +16,7 @@ import org.bukkit.plugin.java.JavaPluginLoader;
 import java.io.File;
 
 @PluginMain
+@Accessors(fluent = true)
 public class RCLoot extends JavaPlugin {
 
     @Getter
@@ -25,6 +26,7 @@ public class RCLoot extends JavaPlugin {
     private Database database;
     private PaperCommandManager commandManager;
 
+    @Getter
     private LootManager lootManager;
 
     @Getter

@@ -1,8 +1,14 @@
 package de.raidcraft.loot.config;
 
+import de.raidcraft.loot.ConfigurationException;
+import de.raidcraft.loot.LootManager;
 import de.raidcraft.loot.LootObject;
 import de.raidcraft.loot.LootTable;
 import de.raidcraft.loot.util.RandomUtil;
+import lombok.Getter;
+import lombok.experimental.Accessors;
+import lombok.extern.java.Log;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -11,38 +17,45 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Log(topic = "RCLoot")
+@Accessors(fluent = true)
 public class ConfiguredLootTable extends ConfiguredLootObject implements LootTable {
+
+    @Getter
+    private final Collection<LootObject> contents = new ArrayList<>();
 
     private Collection<LootObject> uniqueDrops = new HashSet<>();
     private Collection<LootObject> cachedResult = new ArrayList<>();
 
-    private void addToResult(Collection<LootObject> result, LootObject object, Player player) {
+    public ConfiguredLootTable(LootManager lootManager, ConfigurationSection config) {
 
-        if (!object.unique() || !uniqueDrops.contains(object))
-        {
-            if (object.unique()) {
-                uniqueDrops.add(object);
-            }
+        super(lootManager, config);
+    }
 
-            if (!(object instanceof RDSNullValue)) {
-                if (object instanceof LootTable) {
-                    result.addAll(((LootTable) object).loot(player));
-                } else {
-                    // INSTANCECHECK
-                    // Check if the object to add implements IRDSObjectCreator.
-                    // If it does, call the CreateInstance() method and add its return value
-                    // to the result set. If it does not, add the object o directly.
-                    LootObject adder = object;
-                    if (object instanceof RDSObjectCreator)
-                        adder = ((RDSObjectCreator)object).createInstance();
+    @Override
+    @SuppressWarnings("unchecked")
+    public void load() throws ConfigurationException {
 
-                    result.add(adder);
-                    object.onHit();
-                }
-            } else {
-                object.onHit();
+        List<ConfigurationSection> rewards = (List<ConfigurationSection>) config().getList("rewards", new ArrayList<ConfigurationSection>());
+        if (rewards != null) {
+            for (ConfigurationSection reward : rewards) {
+                contents.add(lootManager().loadLootObject(reward));
             }
         }
+    }
+
+    @Override
+    public int count() {
+
+        return config().getInt("count", 1);
+    }
+
+    @Override
+    public Collection<LootObject> loot() {
+
+        this.cachedResult = null;
+
+        return result();
     }
 
     @Override
@@ -127,19 +140,29 @@ public class ConfiguredLootTable extends ConfiguredLootObject implements LootTab
         return cachedResult;
     }
 
-    @Override
-    public Collection<LootObject> loot() {
+    private void addToResult(Collection<LootObject> result, LootObject object) {
 
-        this.cachedResult = null;
+        if (!object.unique() || !uniqueDrops.contains(object))
+        {
+            if (object.unique()) {
+                uniqueDrops.add(object);
+            }
 
-        return result();
-    }
+            if (object instanceof LootTable) {
+                // recursively go through all loot tables and add their results
+                result.addAll(((LootTable) object).loot());
+            } else {
+                // INSTANCECHECK
+                // Check if the object to add implements IRDSObjectCreator.
+                // If it does, call the CreateInstance() method and add its return value
+                // to the result set. If it does not, add the object o directly.
+//                LootObject adder = object;
+//                if (object instanceof RDSObjectCreator)
+//                    adder = ((RDSObjectCreator)object).createInstance();
 
-    @Override
-    public Collection<LootObject> loot(Player player) {
-
-        this.cachedResult = null;
-
-        return result(player);
+                result.add(object);
+                object.onHit();
+            }
+        }
     }
 }

@@ -25,6 +25,7 @@ public interface LootType {
      * that the configuration of the type failed.
      *
      * @param config the config this type is loaded with
+     * @return this loot type
      * @throws ConfigurationException if a configuration error occurred
      */
     LootType load(ConfigurationSection config) throws ConfigurationException;

@@ -15,7 +15,7 @@ public final class Messages {
     private Messages() {}
 
     public static void send(UUID playerId, Component message) {
-        if (RCLoot.isTesting()) return;
+        if (RCLoot.testing()) return;
         BukkitAudiences.create(RCLoot.instance())
                 .player(playerId)
                 .sendMessage(message);

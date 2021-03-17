@@ -1,0 +1,44 @@
+package de.raidcraft.loot.config;
+
+import de.raidcraft.loot.TestBase;
+import org.bukkit.configuration.MemoryConfiguration;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+
+class ConfiguredLootTableTest extends TestBase {
+
+    @Nested
+    @DisplayName("load()")
+    class Load {
+
+        @Test
+        @DisplayName("should load table with inline loot objects")
+        void shouldLoadInlineLootObjects() {
+
+            MemoryConfiguration configuration = new MemoryConfiguration();
+            MemoryConfiguration reward1 = new MemoryConfiguration();
+            reward1.set("type", "command");
+            reward1.set("chance", 20);
+            reward1.set("with.command", "foobar");
+            MemoryConfiguration reward2 = new MemoryConfiguration();
+            reward2.set("type", "none");
+            configuration.set("rewards", Arrays.asList(reward1, reward2));
+
+            ConfiguredLootTable lootTable = new ConfiguredLootTable(lootManager(), configuration);
+
+            assertThatCode(lootTable::load)
+                    .doesNotThrowAnyException();
+
+            assertThat(lootTable.contents())
+                    .hasSize(2)
+                    .anyMatch(lootObject -> lootObject.chance() == 20d);
+        }
+
+    }
+}

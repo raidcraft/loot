@@ -1,10 +1,16 @@
 package de.raidcraft.loot;
 
-import org.bukkit.entity.Player;
-
 import java.util.Collection;
 
 public interface LootTable extends LootObject {
+
+    /**
+     * Loads the loot table and all of its rewards.
+     * <p>Make sure that all dependant tables and loot objects are loaded when loading the loot table.
+     *
+     * @throws ConfigurationException if the loot table references invalid loot objects or missing tables
+     */
+    void load() throws ConfigurationException;
 
     /**
      * The maximum number of entries expected in the Result. The final count of items in the result may be lower
@@ -40,12 +46,12 @@ public interface LootTable extends LootObject {
      */
     Collection<LootObject> loot();
 
-    /**
-     * Will reset the cache and loot the object in a player context.
-     * <p>This means that requirements get evaluated. Otherwise requirements will all be true.
-     *
-     * @param player that is looting
-     * @return random loot with evaluated requirements
-     */
-    Collection<LootObject> loot(Player player);
+//    /**
+//     * Will reset the cache and loot the object in a player context.
+//     * <p>This means that requirements get evaluated. Otherwise requirements will all be true.
+//     *
+//     * @param player that is looting
+//     * @return random loot with evaluated requirements
+//     */
+//    Collection<LootObject> loot(Player player);
 }

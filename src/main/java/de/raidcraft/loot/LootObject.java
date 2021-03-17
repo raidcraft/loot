@@ -96,6 +96,8 @@ public interface LootObject {
     /**
      * Occurs after the result has been calculated and the result set is complete, but before
      * the result method exits.
+     *
+     * @param result the final result of the looting procedure
      */
     default void onPostResultEvaluation(Collection<LootObject> result) {}
 }

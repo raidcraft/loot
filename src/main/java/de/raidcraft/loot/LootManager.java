@@ -3,7 +3,9 @@ package de.raidcraft.loot;
 import com.google.common.base.Strings;
 import de.raidcraft.loot.annotations.LootTypeInfo;
 import de.raidcraft.loot.config.ConfiguredLootObject;
+import de.raidcraft.loot.config.ConfiguredLootTable;
 import de.raidcraft.loot.config.Rarity;
+import de.raidcraft.loot.types.CommandLootType;
 import de.raidcraft.loot.types.EmptyLootType;
 import de.raidcraft.loot.types.ItemLootType;
 import de.raidcraft.loot.util.ConfigUtil;
@@ -28,18 +30,21 @@ public final class LootManager {
     private final Map<String, Rarity> rarities = new HashMap<>();
     private final Map<String, LootType.Registration<?>> lootTypes = new HashMap<>();
     private final Map<String, LootObject> lootObjects = new HashMap<>();
+    private final Map<String, LootTable> lootTables = new HashMap<>();
 
     LootManager(RCLoot plugin) {
         this.plugin = plugin;
 
         register(EmptyLootType.class, EmptyLootType::new);
         register(ItemLootType.class, ItemLootType::new);
+        register(CommandLootType.class, CommandLootType::new);
     }
 
     void load() {
 
         loadRarities();
         loadLootObjects();
+        loadLootTables();
     }
 
     /**
@@ -50,9 +55,8 @@ public final class LootManager {
      * @param typeClass the class of the loot type that is registered
      * @param supplier the supplier that knows how to create an instance of the loot type
      * @param <TType> the type of the loot type class
-     * @return this loot manager
      */
-    public <TType extends LootType> LootManager register(@NonNull Class<TType> typeClass, @NonNull Supplier<TType> supplier) {
+    public <TType extends LootType> void register(@NonNull Class<TType> typeClass, @NonNull Supplier<TType> supplier) {
 
         if (!typeClass.isAnnotationPresent(LootTypeInfo.class)) {
             throw new TypeRegistrationException("loot type " + typeClass.getCanonicalName()
@@ -65,14 +69,11 @@ public final class LootManager {
                     + "! A type with the same identifier " + identifier + " is already registered: "
                     + lootTypes.get(identifier).typeClass().getCanonicalName()
             );
-            return this;
+        } else {
+            LootType.Registration<?> registration = new LootType.Registration<>(identifier, typeClass, supplier);
+            lootTypes.put(identifier, registration);
+            log.info("registered loot type " + identifier + ": " + typeClass.getCanonicalName());
         }
-
-        LootType.Registration<?> registration = new LootType.Registration<>(identifier, typeClass, supplier);
-        lootTypes.put(identifier, registration);
-        log.info("registered loot type " + identifier + ": " + typeClass.getCanonicalName());
-
-        return this;
     }
 
     /**
@@ -93,6 +94,20 @@ public final class LootManager {
     }
 
     /**
+     * Tries to find a loot table with the given identifier.
+     *
+     * @param identifier the identifier of the loot table.
+     *                   can be null or empty.
+     * @return the loot table or an empty optional.
+     */
+    public Optional<LootTable> lootTable(String identifier) {
+
+        if (Strings.isNullOrEmpty(identifier)) return Optional.empty();
+
+        return Optional.ofNullable(lootTables.get(identifier.toLowerCase()));
+    }
+
+    /**
      * Tries to find a loot object with the given identifier.
      *
      * @param identifier the identifier of the loot object
@@ -103,6 +118,51 @@ public final class LootManager {
         if (Strings.isNullOrEmpty(identifier)) return Optional.empty();
 
         return Optional.ofNullable(lootObjects.get(identifier.toLowerCase()));
+    }
+
+    /**
+     * Loads a loot object from the given config source.
+     * <p>It will try to infer an object, type or table based on the properties that are
+     * set in the configuration section.
+     * <p>A default loot object with the provided config is returned if none match.
+     *
+     * @param config the config to load a loot object from
+     * @return the loaded loot object
+     * @throws ConfigurationException if the loot object type is invalid or if the referenced loot object or table does not exist
+     */
+    public LootObject loadLootObject(@NonNull ConfigurationSection config) throws ConfigurationException {
+
+        if (config.isSet("type")) {
+            if (lootType(config.getString("type")).isEmpty()) {
+                throw new ConfigurationException("unknown loot type " + config.getString("type"));
+            }
+        } else if (config.isSet("object")) {
+            Optional<LootObject> object = lootObject(config.getString("object"));
+            if (object.isEmpty()) {
+                throw new ConfigurationException("unknown loot object " + config.getString("object"));
+            }
+
+            LootObject lootObject = object.get();
+            if (lootObject instanceof ConfiguredLootObject) {
+                return ((ConfiguredLootObject) lootObject).merge(config);
+            }
+
+            return lootObject;
+        } else if (config.isSet("table")) {
+            Optional<LootTable> table = lootTable(config.getString("table"));
+            if (table.isEmpty()) {
+                throw new ConfigurationException("unknown loot table " + config.getString("table"));
+            }
+
+            LootTable lootTable = table.get();
+            if (lootTable instanceof ConfiguredLootTable) {
+                return ((ConfiguredLootTable) lootTable).merge(config);
+            }
+
+            return lootTable;
+        }
+
+        return new ConfiguredLootObject(this, config);
     }
 
     /**
@@ -203,28 +263,46 @@ public final class LootManager {
         log.info("loaded " + this.lootObjects.size() + "/" + count + " loot objects");
     }
 
-    private LootObject loadLootObject(@NonNull ConfigurationSection config) throws ConfigurationException {
+    private void loadLootTables() {
 
-        if (config.isSet("type")) {
-            if (lootType(config.getString("type")).isEmpty()) {
-                throw new ConfigurationException("unknown loot type " + config.getString("type"));
+        try {
+            Path path = new File(plugin.getDataFolder(),
+                    Objects.requireNonNull(plugin.getConfig().getString("loot-tables-path", "loot-tables"))
+            ).toPath();
+            Files.createDirectories(path);
+
+            List<File> files = Files.find(path, Integer.MAX_VALUE,
+                    (file, fileAttr) -> fileAttr.isRegularFile())
+                    .map(Path::toFile)
+                    .filter(file -> file.getName().endsWith(".yml") || file.getName().endsWith(".yaml"))
+                    .collect(Collectors.toList());
+
+            for (File file : files) {
+                String key = ConfigUtil.getFileIdentifier(path, file);
+                YamlConfiguration config = new YamlConfiguration();
+                try {
+                    config.load(file);
+                    lootTables.put(key, new ConfiguredLootTable(this, config));
+                } catch (InvalidConfigurationException e) {
+                    log.severe("invalid loot table config " + file.getAbsolutePath() + ": " + e.getMessage());
+                }
             }
-        } else if (config.isSet("object")) {
-            Optional<LootObject> object = lootObject(config.getString("object"));
-            if (object.isEmpty()) {
-                throw new ConfigurationException("unknown loot object " + config.getString("object"));
-            }
-
-            LootObject lootObject = object.get();
-            if (lootObject instanceof ConfiguredLootObject) {
-                return ((ConfiguredLootObject) lootObject).merge(config);
-            }
-
-            return lootObject;
-        } else if (config.isSet("table")) {
-
+        } catch (IOException e) {
+            log.severe("unable to load loot tables from configured path: " + e.getMessage());
+            e.printStackTrace();
         }
 
-        return new ConfiguredLootObject(this, config);
+        int count = lootTables.size();
+        // we need to initialize all tables first to allow tables to depend on tables
+        Map.copyOf(lootTables).forEach((key, lootTable) -> {
+            try {
+                lootTable.load();
+            } catch (ConfigurationException e) {
+                log.severe("failed to load loot table " + key + ": " + e.getMessage());
+                lootTables.remove(key);
+            }
+        });
+
+        log.info("loaded " + lootTables.size() + "/" + count + " loot tables");
     }
 }
