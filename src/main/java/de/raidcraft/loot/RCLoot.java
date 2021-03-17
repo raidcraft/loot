@@ -5,9 +5,7 @@ import de.raidcraft.loot.commands.AdminCommands;
 import de.raidcraft.loot.commands.PlayerCommands;
 import io.ebean.Database;
 import kr.entree.spigradle.annotations.PluginMain;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 import net.silthus.ebean.Config;
 import net.silthus.ebean.EbeanWrapper;
@@ -25,11 +23,9 @@ public class RCLoot extends JavaPlugin {
     private static RCLoot instance;
 
     private Database database;
-    @Getter
-    @Setter(AccessLevel.PACKAGE)
-    private PluginConfig pluginConfig;
-
     private PaperCommandManager commandManager;
+
+    private LootManager lootManager;
 
     @Getter
     private static boolean testing = false;
@@ -50,6 +46,7 @@ public class RCLoot extends JavaPlugin {
 
         loadConfig();
         setupDatabase();
+        setupLootManager();
         setupListener();
         setupCommands();
     }
@@ -62,13 +59,18 @@ public class RCLoot extends JavaPlugin {
     private void loadConfig() {
 
         getDataFolder().mkdirs();
-        pluginConfig = new PluginConfig(new File(getDataFolder(), "config.yml").toPath());
-        pluginConfig.loadAndSave();
+        saveDefaultConfig();
     }
 
     private void setupListener() {
 
 
+    }
+
+    private void setupLootManager() {
+
+        lootManager = new LootManager(this);
+        lootManager.load();
     }
 
     private void setupCommands() {

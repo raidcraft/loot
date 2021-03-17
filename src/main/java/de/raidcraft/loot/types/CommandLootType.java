@@ -1,0 +1,42 @@
+package de.raidcraft.loot.types;
+
+import com.google.common.base.Strings;
+import de.raidcraft.loot.ConfigurationException;
+import de.raidcraft.loot.Constants;
+import de.raidcraft.loot.LootType;
+import de.raidcraft.loot.annotations.LootTypeInfo;
+import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
+
+@LootTypeInfo("command")
+public class CommandLootType implements LootType {
+
+    private String command;
+    private boolean op = false;
+
+    @Override
+    public CommandLootType load(ConfigurationSection config) throws ConfigurationException {
+
+        command = config.getString("command");
+        op = config.getBoolean("op", op);
+
+        if (Strings.isNullOrEmpty(command)) {
+            throw new ConfigurationException("command must not be null or empty");
+        }
+
+        return this;
+    }
+
+    @Override
+    public void addTo(Player target) {
+
+        command = command.replace(Constants.Placeholder.PLAYER_NAME, target.getName());
+
+        if (op) {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+        } else {
+            target.performCommand(command);
+        }
+    }
+}
