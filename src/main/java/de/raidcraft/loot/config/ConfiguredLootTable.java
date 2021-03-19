@@ -39,7 +39,7 @@ public class ConfiguredLootTable extends ConfiguredLootObject implements LootTab
         List<ConfigurationSection> rewards = (List<ConfigurationSection>) config().getList("rewards", new ArrayList<ConfigurationSection>());
         if (rewards != null) {
             for (ConfigurationSection reward : rewards) {
-                contents.add(lootManager().loadLootObject(reward));
+                contents.add(lootManager().loadReward(reward));
             }
         }
     }
@@ -51,11 +51,11 @@ public class ConfiguredLootTable extends ConfiguredLootObject implements LootTab
     }
 
     @Override
-    public Collection<LootObject> loot() {
+    public Collection<LootObject> loot(Player player) {
 
         this.cachedResult = null;
 
-        return result();
+        return result(player);
     }
 
     @Override

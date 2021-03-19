@@ -45,7 +45,7 @@ public class Rarity {
 
     public String format() {
 
-        return config.getString("format", Constants.Placeholder.LOOT_OBJECT_NAME);
+        return config.getString("format", Constants.Placeholder.REWARD_NAME);
     }
 
     public Rarity format(String format) {

@@ -1,16 +1,16 @@
 package de.raidcraft.loot.types;
 
 import de.raidcraft.loot.Constants;
-import de.raidcraft.loot.LootType;
-import de.raidcraft.loot.annotations.LootTypeInfo;
+import de.raidcraft.loot.RewardType;
+import de.raidcraft.loot.annotations.RewardInfo;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
-@LootTypeInfo(Constants.DEFAULT_TYPE)
-public class EmptyLootType implements LootType {
+@RewardInfo(Constants.DEFAULT_TYPE)
+public class EmptyReward implements RewardType {
 
     @Override
-    public EmptyLootType load(ConfigurationSection config) {
+    public EmptyReward load(ConfigurationSection config) {
 
         return this;
     }

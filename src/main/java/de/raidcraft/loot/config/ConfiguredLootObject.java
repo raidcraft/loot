@@ -6,12 +6,14 @@ import de.raidcraft.loot.util.ConfigUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.java.Log;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,8 +21,9 @@ import static de.raidcraft.loot.Constants.DEFAULT_TYPE;
 
 @Log(topic = "RCLoot")
 @Accessors(fluent = true)
+@ToString(of = {"uuid", "config"})
 @EqualsAndHashCode(of = {"uuid"})
-public class ConfiguredLootObject implements de.raidcraft.loot.LootObject {
+public class ConfiguredLootObject implements LootObject {
 
     private final UUID uuid = UUID.randomUUID();
     @Getter
@@ -34,10 +37,21 @@ public class ConfiguredLootObject implements de.raidcraft.loot.LootObject {
     }
 
     @Override
-    public Optional<LootType> type() {
+    public Optional<RewardType> reward() {
 
-        return lootManager().lootType(config().getString("type", DEFAULT_TYPE))
-                .map(lootType -> lootType.load(config().getConfigurationSection("with")));
+        String type = config().getString("type", DEFAULT_TYPE);
+        return lootManager().lootType(type)
+                .map(lootType -> {
+                    try {
+                        return lootType.load(Objects.requireNonNullElse(
+                                config().getConfigurationSection("with"),
+                                config().createSection("with"))
+                        );
+                    } catch (ConfigurationException e) {
+                        log.severe("failed to load reward type " + type + " in reward " + toString() + ": " + e.getMessage());
+                        return null;
+                    }
+                });
     }
 
     public ConfiguredLootObject type(String type) {
@@ -53,7 +67,7 @@ public class ConfiguredLootObject implements de.raidcraft.loot.LootObject {
         String name = config().getString("name");
         if (Strings.isNullOrEmpty(name)) return null;
 
-        return rarity().format().replace(Constants.Placeholder.LOOT_OBJECT_NAME, name);
+        return rarity().format().replace(Constants.Placeholder.REWARD_NAME, name);
     }
 
     public ConfiguredLootObject name(String name) {
@@ -179,18 +193,5 @@ public class ConfiguredLootObject implements de.raidcraft.loot.LootObject {
 
         log.warning("falling back to using default empty rarity in " + toString());
         return new Rarity(new MemoryConfiguration());
-    }
-
-    @Override
-    public String toString() {
-        return "LootObjectConfig{" +
-                "type='" + type() + '\'' +
-                ", name='" + name() + '\'' +
-                ", chance=" + chance() +
-                ", enabled=" + enabled() +
-                ", always=" + always() +
-                ", unique=" + unique() +
-                ", rarity=" + rarity() +
-                '}';
     }
 }

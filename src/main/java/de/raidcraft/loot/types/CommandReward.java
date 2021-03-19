@@ -3,20 +3,20 @@ package de.raidcraft.loot.types;
 import com.google.common.base.Strings;
 import de.raidcraft.loot.ConfigurationException;
 import de.raidcraft.loot.Constants;
-import de.raidcraft.loot.LootType;
-import de.raidcraft.loot.annotations.LootTypeInfo;
+import de.raidcraft.loot.RewardType;
+import de.raidcraft.loot.annotations.RewardInfo;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
-@LootTypeInfo("command")
-public class CommandLootType implements LootType {
+@RewardInfo("command")
+public class CommandReward implements RewardType {
 
     private String command;
     private boolean op = false;
 
     @Override
-    public CommandLootType load(ConfigurationSection config) throws ConfigurationException {
+    public CommandReward load(ConfigurationSection config) throws ConfigurationException {
 
         command = config.getString("command");
         op = config.getBoolean("op", op);

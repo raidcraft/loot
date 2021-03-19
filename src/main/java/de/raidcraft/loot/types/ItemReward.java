@@ -2,21 +2,25 @@ package de.raidcraft.loot.types;
 
 import com.google.common.base.Strings;
 import de.raidcraft.loot.ConfigurationException;
-import de.raidcraft.loot.LootType;
-import de.raidcraft.loot.annotations.LootTypeInfo;
+import de.raidcraft.loot.RewardType;
+import de.raidcraft.loot.annotations.RewardInfo;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-@LootTypeInfo("item")
-public class ItemLootType implements LootType {
+@Getter
+@Accessors(fluent = true)
+@RewardInfo("item")
+public class ItemReward implements RewardType {
 
     private Material item;
     private int amount = 1;
 
     @Override
-    public ItemLootType load(ConfigurationSection config) {
+    public ItemReward load(ConfigurationSection config) {
 
         String item = config.getString("item");
         if (Strings.isNullOrEmpty(item)) {

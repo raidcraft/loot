@@ -10,7 +10,7 @@ import java.util.Optional;
  * A loot object is the high level part of the loot system representing
  * an object that is included in the loot result.
  * <p>{@link LootTable}s are loot objects themselves to allow recursive reward configurations.
- * <p>Every loot object must also define its {@link #type()} which controls how the object is looted.
+ * <p>Every loot object must also define its {@link #reward()} which controls how the object is looted.
  */
 public interface LootObject {
 
@@ -20,7 +20,7 @@ public interface LootObject {
      *
      * @return the type of this loot object
      */
-    Optional<LootType> type();
+    Optional<RewardType> reward();
 
     /**
      * The name of the loot object is formatted with the rarity if present.
@@ -74,11 +74,11 @@ public interface LootObject {
      * Adds this loot object to the given player if a type is present.
      *
      * @param player the player to add this loot object to
-     * @see LootType#addTo(Player)
+     * @see RewardType#addTo(Player)
      */
     default void addTo(Player player) {
 
-        type().ifPresent(lootType -> lootType.addTo(player));
+        reward().ifPresent(reward -> reward.addTo(player));
     }
 
     /**
