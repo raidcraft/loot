@@ -4,6 +4,7 @@ import de.raidcraft.loot.ConfigurationException;
 import de.raidcraft.loot.LootManager;
 import de.raidcraft.loot.LootObject;
 import de.raidcraft.loot.LootTable;
+import de.raidcraft.loot.annotations.LootInfo;
 import de.raidcraft.loot.util.RandomUtil;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Log(topic = "RCLoot")
+@LootInfo("table")
 @Accessors(fluent = true)
 public class ConfiguredLootTable extends ConfiguredLootObject implements LootTable {
 
@@ -39,7 +41,7 @@ public class ConfiguredLootTable extends ConfiguredLootObject implements LootTab
         List<ConfigurationSection> rewards = (List<ConfigurationSection>) config().getList("rewards", new ArrayList<ConfigurationSection>());
         if (rewards != null) {
             for (ConfigurationSection reward : rewards) {
-                contents.add(lootManager().loadReward(reward));
+                contents.add(lootManager().createLootObject(reward));
             }
         }
     }

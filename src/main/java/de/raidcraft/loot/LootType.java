@@ -1,6 +1,6 @@
 package de.raidcraft.loot;
 
-import de.raidcraft.loot.annotations.RewardInfo;
+import de.raidcraft.loot.annotations.LootInfo;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -8,15 +8,16 @@ import lombok.experimental.Accessors;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
  * The loot type is what actually gets looted by the player.
  * <p>It can be an item, money or even a command that is executed.
- * <p>Every loot type must be annotated with {@link RewardInfo}
+ * <p>Every loot type must be annotated with {@link LootInfo}
  * and provide a unique identifier to the type.
  */
-public interface RewardType {
+public interface LootType {
 
     /**
      * The load method is called once after creating a new instance
@@ -28,7 +29,7 @@ public interface RewardType {
      * @return this loot type
      * @throws ConfigurationException if a configuration error occurred
      */
-    RewardType load(ConfigurationSection config) throws ConfigurationException;
+    LootType load(ConfigurationSection config) throws ConfigurationException;
 
     /**
      * The addTo method is called when this loot type is rewarded to the player.
@@ -43,7 +44,7 @@ public interface RewardType {
     @Value
     @Accessors(fluent = true)
     @AllArgsConstructor(access = AccessLevel.PACKAGE)
-    class Registration<TType extends RewardType> {
+    class Registration<TType extends LootType> {
 
         String identifier;
         Class<TType> typeClass;

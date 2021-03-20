@@ -1,7 +1,7 @@
 package de.raidcraft.loot.config;
 
 import de.raidcraft.loot.TestBase;
-import de.raidcraft.loot.types.ItemReward;
+import de.raidcraft.loot.types.ItemLoot;
 import org.bukkit.Material;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.junit.jupiter.api.DisplayName;
@@ -28,12 +28,12 @@ class ConfiguredLootObjectTest extends TestBase {
 
             ConfiguredLootObject reward = new ConfiguredLootObject(lootManager(), cfg);
 
-            assertThat(reward.reward())
+            assertThat(reward.type())
                     .isPresent()
                     .get()
-                    .isInstanceOf(ItemReward.class)
-                    .asInstanceOf(type(ItemReward.class))
-                    .extracting(ItemReward::item, ItemReward::amount)
+                    .isInstanceOf(ItemLoot.class)
+                    .asInstanceOf(type(ItemLoot.class))
+                    .extracting(ItemLoot::item, ItemLoot::amount)
                     .contains(Material.WOODEN_SWORD, 1);
         }
 
@@ -47,7 +47,7 @@ class ConfiguredLootObjectTest extends TestBase {
 
             ConfiguredLootObject reward = new ConfiguredLootObject(lootManager(), cfg);
 
-            assertThat(reward.reward())
+            assertThat(reward.type())
                     .isEmpty();
         }
     }

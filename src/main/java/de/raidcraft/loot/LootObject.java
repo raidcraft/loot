@@ -1,6 +1,7 @@
 package de.raidcraft.loot;
 
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.Collection;
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.Optional;
  * A loot object is the high level part of the loot system representing
  * an object that is included in the loot result.
  * <p>{@link LootTable}s are loot objects themselves to allow recursive reward configurations.
- * <p>Every loot object must also define its {@link #reward()} which controls how the object is looted.
+ * <p>Every loot object must also define its {@link #type()} which controls how the object is looted.
  */
 public interface LootObject {
 
@@ -20,7 +21,7 @@ public interface LootObject {
      *
      * @return the type of this loot object
      */
-    Optional<RewardType> reward();
+    Optional<LootType> type();
 
     /**
      * The name of the loot object is formatted with the rarity if present.
@@ -31,10 +32,39 @@ public interface LootObject {
     String name();
 
     /**
+     * Sets the name of the loot object.
+     *
+     * @param name the name to set
+     * @return this loot object
+     */
+    LootObject name(String name);
+
+    /**
      * @return a list of lore lines of this loot object that can be displayed in a gui.
      *         each element represents a line to display in the lore.
      */
     List<String> lore();
+
+    /**
+     * Sets the lore of the loot object.
+     *
+     * @param lore the lore to set
+     * @return this loot object
+     */
+    LootObject lore(String... lore);
+
+    /**
+     * @return an optional item stack to use as the icon for this loot object
+     */
+    Optional<ItemStack> icon();
+
+    /**
+     * Sets the icon of the loot object.
+     *
+     * @param icon the icon to set
+     * @return this loot object
+     */
+    LootObject icon(ItemStack icon);
 
     /**
      * The chance of the loot object is a relative weight compared to all other
@@ -74,11 +104,11 @@ public interface LootObject {
      * Adds this loot object to the given player if a type is present.
      *
      * @param player the player to add this loot object to
-     * @see RewardType#addTo(Player)
+     * @see LootType#addTo(Player)
      */
     default void addTo(Player player) {
 
-        reward().ifPresent(reward -> reward.addTo(player));
+        type().ifPresent(reward -> reward.addTo(player));
     }
 
     /**

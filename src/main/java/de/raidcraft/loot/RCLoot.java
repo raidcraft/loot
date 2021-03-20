@@ -1,5 +1,6 @@
 package de.raidcraft.loot;
 
+import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.PaperCommandManager;
 import de.raidcraft.loot.commands.AdminCommands;
 import de.raidcraft.loot.commands.PlayerCommands;
@@ -56,6 +57,7 @@ public class RCLoot extends JavaPlugin {
     public void reload() {
 
         loadConfig();
+        lootManager().reload();
     }
 
     private void loadConfig() {
@@ -79,8 +81,30 @@ public class RCLoot extends JavaPlugin {
 
         this.commandManager = new PaperCommandManager(this);
 
+        // contexts
+        lootTableContext(commandManager);
+
+        // completions
+        lootTableCompletion(commandManager);
+
         commandManager.registerCommand(new AdminCommands(this));
         commandManager.registerCommand(new PlayerCommands(this));
+    }
+
+    private void lootTableContext(PaperCommandManager commandManager) {
+
+        commandManager.getCommandContexts().registerContext(LootTable.class, context -> {
+            String name = context.popFirstArg();
+            return lootManager()
+                    .lootTable(name)
+                    .orElseThrow(() -> new InvalidCommandArgument("Es gibt keine Loot Tabelle mit dem Namen: " + name));
+        });
+    }
+
+    private void lootTableCompletion(PaperCommandManager commandManager) {
+
+        commandManager.getCommandCompletions().registerAsyncCompletion("tables",
+                context -> lootManager().lootTables().keySet());
     }
 
     private void setupDatabase() {

@@ -9,8 +9,10 @@ import lombok.NonNull;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.java.Log;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Objects;
@@ -30,6 +32,7 @@ public class ConfiguredLootObject implements LootObject {
     private final LootManager lootManager;
     @Getter
     private final ConfigurationSection config;
+    private ItemStack icon;
 
     public ConfiguredLootObject(LootManager lootManager, ConfigurationSection config) {
         this.lootManager = lootManager;
@@ -37,7 +40,7 @@ public class ConfiguredLootObject implements LootObject {
     }
 
     @Override
-    public Optional<RewardType> reward() {
+    public Optional<LootType> type() {
 
         String type = config().getString("type", DEFAULT_TYPE);
         return lootManager().lootType(type)
@@ -81,6 +84,43 @@ public class ConfiguredLootObject implements LootObject {
     public List<String> lore() {
 
         return config().getStringList("lore");
+    }
+
+    @Override
+    public LootObject lore(String... lore) {
+
+        config().set("lore", lore);
+
+        return this;
+    }
+
+    @Override
+    public Optional<ItemStack> icon() {
+
+        if (icon != null) return Optional.of(icon);
+
+        type().filter(lootType -> lootType instanceof IconProvider)
+                .map(lootType -> (IconProvider) lootType)
+                .map(IconProvider::icon)
+                .ifPresentOrElse(itemStack -> icon = itemStack, () -> {
+                    String icon = config().getString("icon");
+                    if (Strings.isNullOrEmpty(icon)) return;
+
+                    Material material = Material.matchMaterial(icon);
+                    if (material == null) return;
+
+                    this.icon = new ItemStack(material);
+                });
+
+        return Optional.ofNullable(icon);
+    }
+
+    @Override
+    public LootObject icon(ItemStack icon) {
+
+        this.icon = icon;
+
+        return this;
     }
 
     public ConfiguredLootObject lore(List<String> lore) {

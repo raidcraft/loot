@@ -1,12 +1,16 @@
 package de.raidcraft.loot.config;
 
+import de.raidcraft.loot.LootObject;
 import de.raidcraft.loot.TestBase;
+import de.raidcraft.loot.types.EmptyLoot;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -40,5 +44,31 @@ class ConfiguredLootTableTest extends TestBase {
                     .anyMatch(lootObject -> lootObject.chance() == 20d);
         }
 
+        @Test
+        @DisplayName("should load table with predefined loot objects")
+        void shouldLoadTableWithPredefinedLootObjects() {
+
+            MemoryConfiguration cfg = new MemoryConfiguration();
+            cfg.set("type", "none");
+            lootManager().register("foo", lootManager().createLootObject(cfg));
+
+            MemoryConfiguration tableCfg = new MemoryConfiguration();
+            MemoryConfiguration reward1 = new MemoryConfiguration();
+            reward1.set("object", "foo");
+            tableCfg.set("rewards", Collections.singletonList(reward1));
+
+            ConfiguredLootTable lootTable = new ConfiguredLootTable(lootManager(), tableCfg);
+
+            assertThatCode(lootTable::load)
+                    .doesNotThrowAnyException();
+
+            assertThat(lootTable.contents())
+                    .hasSize(1)
+                    .extracting(LootObject::type)
+                    .isNotEmpty()
+                    .extracting(Optional::get)
+                    .first()
+                    .isInstanceOf(EmptyLoot.class);
+        }
     }
 }
