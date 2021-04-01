@@ -1,11 +1,9 @@
 package de.raidcraft.loot.targets;
 
-import de.raidcraft.loot.LootObject;
 import de.raidcraft.loot.LootTarget;
+import de.raidcraft.loot.Reward;
 import lombok.Getter;
-import lombok.Value;
 import lombok.experimental.Accessors;
-import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,15 +12,15 @@ import java.util.Collection;
 @Accessors(fluent = true)
 public abstract class AbstractLootTarget<TType> implements LootTarget<TType> {
 
-    private final Collection<LootObject> lootObjects = new ArrayList<>();
+    private final Collection<Reward> rewards = new ArrayList<>();
 
     @Override
-    public void add(Collection<LootObject> lootObjects) {
+    public void add(Collection<Reward> lootObjects) {
 
-        this.lootObjects.addAll(lootObjects);
+        this.rewards.addAll(lootObjects);
     }
 
-    public Collection<LootObject> lootObjects() {
-        return this.lootObjects;
+    public Collection<Reward> rewards() {
+        return this.rewards;
     }
 }

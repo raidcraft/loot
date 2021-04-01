@@ -5,22 +5,23 @@ import org.bukkit.entity.Player;
 import java.util.Collection;
 
 public interface Lootable {
-    /**
-     * Gets the result. Calling this method will start the random pick process and generate the result.
-     * <p>This result remains constant for the lifetime of this table object.
-     * Use the {@link #loot()} method to clear the result and create a new one.
-     *
-     * @return calculated random result of this table
-     */
-    Collection<LootObject> result();
 
     /**
-     * Will reset the last cached result and
-     * generate a new result by calling {@link #result()}.
+     * Gets the last cached rewards for the given player.
+     * <p>This result remains constant for the lifetime of this table object.
+     * Use the {@link #loot()} method to clear the result set and create a new one.
+     * <p>Will generate a new cached result if none exists yet.
+     *
+     * @return the last cached result of the loot table
+     */
+    Collection<Reward> lastRewards(Player player);
+
+    /**
+     * Will reset the last cached result and generate a new result set.
      *
      * @return fresh random result
      */
-    default Collection<LootObject> loot() {
+    default Collection<Reward> loot() {
 
         return loot(null);
     }
@@ -32,5 +33,5 @@ public interface Lootable {
      * @param player that is looting
      * @return random loot with evaluated requirements
      */
-    Collection<LootObject> loot(Player player);
+    Collection<Reward> loot(Player player);
 }

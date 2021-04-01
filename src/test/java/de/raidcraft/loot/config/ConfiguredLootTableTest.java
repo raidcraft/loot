@@ -1,8 +1,9 @@
 package de.raidcraft.loot.config;
 
 import de.raidcraft.loot.LootObject;
+import de.raidcraft.loot.Reward;
 import de.raidcraft.loot.TestBase;
-import de.raidcraft.loot.types.EmptyLoot;
+import de.raidcraft.loot.types.EmptyReward;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -64,11 +65,11 @@ class ConfiguredLootTableTest extends TestBase {
 
             assertThat(lootTable.contents())
                     .hasSize(1)
-                    .extracting(LootObject::type)
+                    .extracting(lootObject -> ((Reward) lootObject).type())
                     .isNotEmpty()
                     .extracting(Optional::get)
                     .first()
-                    .isInstanceOf(EmptyLoot.class);
+                    .isInstanceOf(EmptyReward.class);
         }
     }
 }

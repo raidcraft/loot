@@ -1,10 +1,6 @@
 package de.raidcraft.loot.config;
 
-import de.raidcraft.loot.ConfigurationException;
-import de.raidcraft.loot.LootManager;
-import de.raidcraft.loot.LootObject;
-import de.raidcraft.loot.LootTable;
-import de.raidcraft.loot.annotations.LootInfo;
+import de.raidcraft.loot.*;
 import de.raidcraft.loot.util.RandomUtil;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -19,7 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Log(topic = "RCLoot")
-@LootInfo("table")
+@RewardInfo("table")
 @Accessors(fluent = true)
 public class ConfiguredLootTable extends ConfiguredLootObject implements LootTable {
 
@@ -27,11 +23,17 @@ public class ConfiguredLootTable extends ConfiguredLootObject implements LootTab
     private final Collection<LootObject> contents = new ArrayList<>();
 
     private Collection<LootObject> uniqueDrops = new HashSet<>();
-    private Collection<LootObject> cachedResult = new ArrayList<>();
+    private Collection<Reward> cachedResult = new ArrayList<>();
 
     public ConfiguredLootTable(LootManager lootManager, ConfigurationSection config) {
 
         super(lootManager, config);
+    }
+
+    @Override
+    protected LootObject create(LootManager lootManager, ConfigurationSection config) {
+
+        return new ConfiguredLootTable(lootManager, config);
     }
 
     @Override
@@ -53,20 +55,15 @@ public class ConfiguredLootTable extends ConfiguredLootObject implements LootTab
     }
 
     @Override
-    public Collection<LootObject> loot(Player player) {
+    public Collection<Reward> loot(Player player) {
 
         this.cachedResult = null;
 
-        return result(player);
+        return lastRewards(player);
     }
 
     @Override
-    public Collection<LootObject> result() {
-
-        return result(null);
-    }
-
-    public Collection<LootObject> result(Player player) {
+    public Collection<Reward> lastRewards(Player player) {
 
         if (cachedResult != null) return cachedResult;
 
@@ -78,7 +75,7 @@ public class ConfiguredLootTable extends ConfiguredLootObject implements LootTab
 //        }
 
         // The return value, a list of hit objects
-        List<LootObject> result = new ArrayList<>();
+        List<Reward> result = new ArrayList<>();
         uniqueDrops = new HashSet<>();
 
         // Do the PreEvaluation on all objects contained in the current table
@@ -132,7 +129,7 @@ public class ConfiguredLootTable extends ConfiguredLootObject implements LootTab
 
         // Now give all objects in the result set the chance to interact with
         // the other objects in the result set.
-        for (LootObject object : result) {
+        for (Reward object : result) {
             object.onPostResultEvaluation(result);
         }
 
@@ -142,7 +139,7 @@ public class ConfiguredLootTable extends ConfiguredLootObject implements LootTab
         return cachedResult;
     }
 
-    private void addToResult(Collection<LootObject> result, LootObject object) {
+    private void addToResult(Collection<Reward> result, LootObject object) {
 
         if (!object.unique() || !uniqueDrops.contains(object))
         {
@@ -153,16 +150,8 @@ public class ConfiguredLootTable extends ConfiguredLootObject implements LootTab
             if (object instanceof LootTable) {
                 // recursively go through all loot tables and add their results
                 result.addAll(((LootTable) object).loot());
-            } else {
-                // INSTANCECHECK
-                // Check if the object to add implements IRDSObjectCreator.
-                // If it does, call the CreateInstance() method and add its return value
-                // to the result set. If it does not, add the object o directly.
-//                LootObject adder = object;
-//                if (object instanceof RDSObjectCreator)
-//                    adder = ((RDSObjectCreator)object).createInstance();
-
-                result.add(object);
+            } else if (object instanceof Reward) {
+                result.add((Reward) object);
                 object.onHit();
             }
         }

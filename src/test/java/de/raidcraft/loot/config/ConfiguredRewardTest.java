@@ -1,7 +1,7 @@
 package de.raidcraft.loot.config;
 
 import de.raidcraft.loot.TestBase;
-import de.raidcraft.loot.types.ItemLoot;
+import de.raidcraft.loot.types.ItemReward;
 import org.bukkit.Material;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.junit.jupiter.api.DisplayName;
@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
 
-class ConfiguredLootObjectTest extends TestBase {
+class ConfiguredRewardTest extends TestBase {
 
     @Nested
     @DisplayName("type()")
@@ -26,14 +26,14 @@ class ConfiguredLootObjectTest extends TestBase {
             cfg.set("type", "item");
             cfg.set("with.item", "wooden_sword");
 
-            ConfiguredLootObject reward = new ConfiguredLootObject(lootManager(), cfg);
+            ConfiguredReward reward = new ConfiguredReward(lootManager(), cfg);
 
             assertThat(reward.type())
                     .isPresent()
                     .get()
-                    .isInstanceOf(ItemLoot.class)
-                    .asInstanceOf(type(ItemLoot.class))
-                    .extracting(ItemLoot::item, ItemLoot::amount)
+                    .isInstanceOf(ItemReward.class)
+                    .asInstanceOf(type(ItemReward.class))
+                    .extracting(ItemReward::item, ItemReward::amount)
                     .contains(Material.WOODEN_SWORD, 1);
         }
 
@@ -45,7 +45,7 @@ class ConfiguredLootObjectTest extends TestBase {
             cfg.set("type", "item");
             cfg.set("with.item", "foobar");
 
-            ConfiguredLootObject reward = new ConfiguredLootObject(lootManager(), cfg);
+            ConfiguredReward reward = new ConfiguredReward(lootManager(), cfg);
 
             assertThat(reward.type())
                     .isEmpty();

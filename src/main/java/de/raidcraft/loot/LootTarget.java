@@ -8,13 +8,13 @@ import java.util.Collection;
  */
 public interface LootTarget<TType> {
 
-    Collection<LootObject> lootObjects();
+    Collection<Reward> rewards();
 
-    default void add(LootObject... lootObjects) {
+    default void add(Reward... lootObjects) {
         add(Arrays.asList(lootObjects));
     }
 
-    void add(Collection<LootObject> lootObjects);
+    void add(Collection<Reward> lootObjects);
 
     void addTo(TType target);
 }

@@ -1,13 +1,12 @@
 package de.raidcraft.loot;
 
 import com.google.common.base.Strings;
-import de.raidcraft.loot.annotations.LootInfo;
-import de.raidcraft.loot.config.ConfiguredLootObject;
 import de.raidcraft.loot.config.ConfiguredLootTable;
+import de.raidcraft.loot.config.ConfiguredReward;
 import de.raidcraft.loot.config.Rarity;
-import de.raidcraft.loot.types.CommandLoot;
-import de.raidcraft.loot.types.EmptyLoot;
-import de.raidcraft.loot.types.ItemLoot;
+import de.raidcraft.loot.types.CommandReward;
+import de.raidcraft.loot.types.EmptyReward;
+import de.raidcraft.loot.types.ItemReward;
 import de.raidcraft.loot.util.ConfigUtil;
 import lombok.NonNull;
 import lombok.extern.java.Log;
@@ -20,7 +19,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -29,16 +27,16 @@ public final class LootManager {
 
     private final RCLoot plugin;
     private final Map<String, Rarity> rarities = new HashMap<>();
-    private final Map<String, LootType.Registration<?>> lootTypes = new HashMap<>();
+    private final Map<String, RewardType.Registration<?>> lootTypes = new HashMap<>();
     private final Map<String, LootObject> lootObjects = new HashMap<>();
     private final Map<String, LootTable> lootTables = new HashMap<>();
 
     LootManager(RCLoot plugin) {
         this.plugin = plugin;
 
-        register(EmptyLoot.class, EmptyLoot::new);
-        register(ItemLoot.class, ItemLoot::new);
-        register(CommandLoot.class, CommandLoot::new);
+        register(EmptyReward.class, EmptyReward::new);
+        register(ItemReward.class, ItemReward::new);
+        register(CommandReward.class, CommandReward::new);
     }
 
     void reload() {
@@ -63,30 +61,30 @@ public final class LootManager {
 
     /**
      * Registers a new loot type for the given class.
-     * <p>Make sure that the loot type is annotated with {@link LootInfo} and has a unique
+     * <p>Make sure that the loot type is annotated with {@link RewardInfo} and has a unique
      * identifier. A {@link TypeRegistrationException} will be thrown instead.
      *
      * @param typeClass the class of the loot type that is registered
      * @param supplier the supplier that knows how to create an instance of the loot type
      * @param <TType> the type of the loot type class
      */
-    public <TType extends LootType> void register(@NonNull Class<TType> typeClass, @NonNull Supplier<TType> supplier) {
+    public <TType extends RewardType> void register(@NonNull Class<TType> typeClass, @NonNull Supplier<TType> supplier) {
 
-        if (!typeClass.isAnnotationPresent(LootInfo.class)) {
-            throw new TypeRegistrationException("loot type " + typeClass.getCanonicalName()
+        if (!typeClass.isAnnotationPresent(RewardInfo.class)) {
+            throw new TypeRegistrationException("reward type " + typeClass.getCanonicalName()
                     + " is missing the required @LootTypeInfo annotation");
         }
 
-        String identifier = typeClass.getAnnotation(LootInfo.class).value().toLowerCase();
+        String identifier = typeClass.getAnnotation(RewardInfo.class).value().toLowerCase();
         if (lootTypes.containsKey(identifier)) {
-            log.severe("unable to register loot type " + typeClass.getCanonicalName()
+            log.severe("unable to register reward type " + typeClass.getCanonicalName()
                     + "! A type with the same identifier " + identifier + " is already registered: "
                     + lootTypes.get(identifier).typeClass().getCanonicalName()
             );
         } else {
-            LootType.Registration<?> registration = new LootType.Registration<>(identifier, typeClass, supplier);
+            RewardType.Registration<?> registration = new RewardType.Registration<>(identifier, typeClass, supplier);
             lootTypes.put(identifier, registration);
-            log.info("registered loot type " + identifier + ": " + typeClass.getCanonicalName());
+            log.info("registered reward type " + identifier + ": " + typeClass.getCanonicalName());
         }
     }
 
@@ -142,12 +140,12 @@ public final class LootManager {
      *             can be null or empty, but will return an empty optional.
      * @return a new loot type instance if the type was found
      */
-    public Optional<LootType> lootType(String type) {
+    public Optional<RewardType> lootType(String type) {
 
         if (Strings.isNullOrEmpty(type)) return Optional.empty();
 
         return Optional.ofNullable(lootTypes.get(type.toLowerCase()))
-                .map(LootType.Registration::supplier)
+                .map(RewardType.Registration::supplier)
                 .map(Supplier::get);
     }
 
@@ -212,10 +210,10 @@ public final class LootManager {
             } else if (!lootTypes.containsKey(config.getString("type"))) {
                 throw new ConfigurationException("unknown loot type " + config.getString("type"));
             }
-        } else if (config.isSet("object")) {
-            Optional<LootObject> object = lootObject(config.getString("object"));
+        } else if (config.isSet("reward")) {
+            Optional<LootObject> object = lootObject(config.getString("reward"));
             if (object.isEmpty()) {
-                throw new ConfigurationException("unknown loot object " + config.getString("object"));
+                throw new ConfigurationException("unknown reward " + config.getString("reward"));
             }
 
             LootObject lootObject = object.get();
@@ -238,7 +236,7 @@ public final class LootManager {
             return lootTable;
         }
 
-        return new ConfiguredLootObject(this, config);
+        return new ConfiguredReward(this, config);
     }
 
     /**
@@ -279,7 +277,7 @@ public final class LootManager {
         final Map<String, ConfigurationSection> failedLoads = new HashMap<>();
         int count = 0;
 
-        ConfigurationSection lootObjects = plugin.getConfig().getConfigurationSection("loot-objects");
+        ConfigurationSection lootObjects = plugin.getConfig().getConfigurationSection("rewards");
         if (lootObjects != null) {
             for (String key : lootObjects.getKeys(false)) {
                 ConfigurationSection section = lootObjects.getConfigurationSection(key);
@@ -297,7 +295,7 @@ public final class LootManager {
 
         try {
             Path path = new File(plugin.getDataFolder(),
-                    Objects.requireNonNull(plugin.getConfig().getString("loot-objects-path", "loot-objects"))
+                    Objects.requireNonNull(plugin.getConfig().getString("rewards-path", "rewards"))
             ).toPath();
 
             Files.createDirectories(path);
@@ -319,11 +317,11 @@ public final class LootManager {
                     // queue the loading of the loot object for later
                     failedLoads.put(key, config);
                 } catch (InvalidConfigurationException e) {
-                    log.severe("invalid loot object config " + file.getAbsolutePath() + ": " + e.getMessage());
+                    log.severe("invalid reward config " + file.getAbsolutePath() + ": " + e.getMessage());
                 }
             }
         } catch (IOException e) {
-            log.severe("unable to load loot objects from configured path: " + e.getMessage());
+            log.severe("unable to load rewards from configured path: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -332,11 +330,11 @@ public final class LootManager {
             try {
                 register(entry.getKey(), createLootObject(entry.getValue()));
             } catch (ConfigurationException e) {
-                log.severe("failed to load loot object " + entry.getKey() + ": " + e.getMessage());
+                log.severe("failed to load reward " + entry.getKey() + ": " + e.getMessage());
             }
         }
 
-        log.info("loaded " + this.lootObjects.size() + "/" + count + " loot objects");
+        log.info("loaded " + this.lootObjects.size() + "/" + count + " rewards");
     }
 
     private void loadLootTables() {

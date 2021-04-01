@@ -3,9 +3,8 @@ package de.raidcraft.loot.types;
 import com.google.common.base.Strings;
 import de.raidcraft.loot.ConfigurationException;
 import de.raidcraft.loot.IconProvider;
-import de.raidcraft.loot.LootObject;
-import de.raidcraft.loot.LootType;
-import de.raidcraft.loot.annotations.LootInfo;
+import de.raidcraft.loot.RewardInfo;
+import de.raidcraft.loot.RewardType;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.bukkit.Material;
@@ -15,14 +14,14 @@ import org.bukkit.inventory.ItemStack;
 
 @Getter
 @Accessors(fluent = true)
-@LootInfo("item")
-public class ItemLoot implements LootType, IconProvider {
+@RewardInfo("item")
+public class ItemReward implements RewardType, IconProvider {
 
     private Material item;
     private int amount = 1;
 
     @Override
-    public ItemLoot load(ConfigurationSection config) {
+    public ItemReward load(ConfigurationSection config) {
 
         String item = config.getString("item");
         if (Strings.isNullOrEmpty(item)) {

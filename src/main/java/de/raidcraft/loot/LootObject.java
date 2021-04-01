@@ -1,70 +1,16 @@
 package de.raidcraft.loot;
 
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
+import lombok.NonNull;
+import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * A loot object is the high level part of the loot system representing
  * an object that is included in the loot result.
  * <p>{@link LootTable}s are loot objects themselves to allow recursive reward configurations.
- * <p>Every loot object must also define its {@link #type()} which controls how the object is looted.
  */
 public interface LootObject {
-
-    /**
-     * The loot object type defines the underlying implementation of the loot object.
-     * <p>An example could be an item or command.
-     *
-     * @return the type of this loot object
-     */
-    Optional<LootType> type();
-
-    /**
-     * The name of the loot object is formatted with the rarity if present.
-     *
-     * @return the name to display to the consumer of the object.
-     *         may be null if not name is set.
-     */
-    String name();
-
-    /**
-     * Sets the name of the loot object.
-     *
-     * @param name the name to set
-     * @return this loot object
-     */
-    LootObject name(String name);
-
-    /**
-     * @return a list of lore lines of this loot object that can be displayed in a gui.
-     *         each element represents a line to display in the lore.
-     */
-    List<String> lore();
-
-    /**
-     * Sets the lore of the loot object.
-     *
-     * @param lore the lore to set
-     * @return this loot object
-     */
-    LootObject lore(String... lore);
-
-    /**
-     * @return an optional item stack to use as the icon for this loot object
-     */
-    Optional<ItemStack> icon();
-
-    /**
-     * Sets the icon of the loot object.
-     *
-     * @param icon the icon to set
-     * @return this loot object
-     */
-    LootObject icon(ItemStack icon);
 
     /**
      * The chance of the loot object is a relative weight compared to all other
@@ -101,17 +47,6 @@ public interface LootObject {
     boolean unique();
 
     /**
-     * Adds this loot object to the given player if a type is present.
-     *
-     * @param player the player to add this loot object to
-     * @see LootType#addTo(Player)
-     */
-    default void addTo(Player player) {
-
-        type().ifPresent(reward -> reward.addTo(player));
-    }
-
-    /**
      * Occurs before all the probabilities of all loot objects of the current result calculation are summed up together.
      * This is the moment to modify any settings immediately before a result is calculated.
      */
@@ -129,5 +64,15 @@ public interface LootObject {
      *
      * @param result the final result of the looting procedure
      */
-    default void onPostResultEvaluation(Collection<LootObject> result) {}
+    default void onPostResultEvaluation(Collection<Reward> result) {}
+
+    /**
+     * Merges this loot objects config with the config of the given loot object.
+     * <p>
+     * Any values set in this loot object will take precedence over the given loot object.
+     *
+     * @param lootObject the loot object to merge into this loot object
+     * @return a new merged instance of both loot objects
+     */
+    LootObject merge(LootObject lootObject);
 }

@@ -11,7 +11,7 @@ rarities:
     # maximal ein mystisches loot objekt ist im ergebnis enthalten
     # wenn <1 oder nicht gesetzt können beliebig viele dieser rarität enthalten sein
     max: 1
-loot-objects:
+rewards:
   money-2000:
     type: money
     # the name is formatted with the rarity and displayed
@@ -57,8 +57,8 @@ loot-tables:
       mystic:
         max: 2
     rewards:
-      - object: red_egg
-      - object: green_egg
+      - reward: red_egg
+      - reward: green_egg
   # in der vorschau werden alle items die gelootet werden können zusammen geschmissen
   # und eine chance basierend auf der chance und dem count berechnet
   example:
@@ -89,13 +89,13 @@ loot-tables:
       # object - eins der vordefinierten loot objekte
       # table - eine der definierten loot tabellen
       # type - ein inline loot objekt
-      - object: money-2000
+      - reward: money-2000
         chance: 10
         # dieser reward kann maximal zwei mal vorkommen
         # wird count weggelassen kann der reward nur einmal vorkommen
         # ein count von 2 verdoppelt quasi die chance dieses loot objekts
         count: 2
-      - object: diamonds
+      - reward: diamonds
         always: true
         with:
           # !Wichtig! amount ist etwas anderes als count
