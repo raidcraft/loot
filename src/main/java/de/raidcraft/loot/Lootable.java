@@ -10,6 +10,7 @@ public interface Lootable {
      * Use the {@link #loot()} method to clear the result set and create a new one.
      * <p>Will generate a new cached result if none exists yet.
      *
+     * @param player the player to get the cached result for. may be null.
      * @return the last cached result of the loot table
      */
     LootResult rewards(Player player);

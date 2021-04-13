@@ -24,7 +24,7 @@ class ConfiguredRewardTest extends TestBase {
             MemoryConfiguration cfg = new MemoryConfiguration();
             cfg.set("name", "Test");
             cfg.set("type", "item");
-            cfg.set("with.item", "wooden_sword");
+            cfg.set("item", "wooden_sword");
 
             ConfiguredReward reward = new ConfiguredReward(lootManager(), cfg);
 
@@ -43,7 +43,7 @@ class ConfiguredRewardTest extends TestBase {
 
             MemoryConfiguration cfg = new MemoryConfiguration();
             cfg.set("type", "item");
-            cfg.set("with.item", "foobar");
+            cfg.set("item", "foobar");
 
             ConfiguredReward reward = new ConfiguredReward(lootManager(), cfg);
 

@@ -1,7 +1,7 @@
 package de.raidcraft.loot.config;
 
-import de.raidcraft.loot.LootObject;
 import de.raidcraft.loot.Reward;
+import de.raidcraft.loot.RewardType;
 import de.raidcraft.loot.TestBase;
 import de.raidcraft.loot.types.EmptyReward;
 import org.bukkit.configuration.MemoryConfiguration;
@@ -30,7 +30,7 @@ class ConfiguredLootTableTest extends TestBase {
             MemoryConfiguration reward1 = new MemoryConfiguration();
             reward1.set("type", "command");
             reward1.set("chance", 20);
-            reward1.set("with.command", "foobar");
+            reward1.set("command", "foobar");
             MemoryConfiguration reward2 = new MemoryConfiguration();
             reward2.set("type", "none");
             configuration.set("rewards", Arrays.asList(reward1, reward2));
@@ -55,7 +55,7 @@ class ConfiguredLootTableTest extends TestBase {
 
             MemoryConfiguration tableCfg = new MemoryConfiguration();
             MemoryConfiguration reward1 = new MemoryConfiguration();
-            reward1.set("object", "foo");
+            reward1.set("reward", "foo");
             tableCfg.set("rewards", Collections.singletonList(reward1));
 
             ConfiguredLootTable lootTable = new ConfiguredLootTable(lootManager(), tableCfg);
@@ -63,12 +63,10 @@ class ConfiguredLootTableTest extends TestBase {
             assertThatCode(lootTable::load)
                     .doesNotThrowAnyException();
 
-            assertThat(lootTable.contents())
-                    .hasSize(1)
-                    .extracting(lootObject -> ((Reward) lootObject).type())
+            Optional<RewardType> type = ((Reward) lootTable.contents().get(0)).type();
+            assertThat(type)
                     .isNotEmpty()
-                    .extracting(Optional::get)
-                    .first()
+                    .get()
                     .isInstanceOf(EmptyReward.class);
         }
     }

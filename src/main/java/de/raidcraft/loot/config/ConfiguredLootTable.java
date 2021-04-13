@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.experimental.Accessors;
 import lombok.extern.java.Log;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -35,13 +36,25 @@ public class ConfiguredLootTable extends ConfiguredLootObject implements LootTab
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void load() throws ConfigurationException {
 
-        List<ConfigurationSection> rewards = (List<ConfigurationSection>) config().getList("rewards", new ArrayList<ConfigurationSection>());
-        if (rewards != null) {
-            for (ConfigurationSection reward : rewards) {
-                contents.add(lootManager().createLootObject(reward));
+        List<?> list = config().getList("rewards");
+        if (list == null) return;
+
+        MemoryConfiguration temp = new MemoryConfiguration();
+        for (int i = 0; i < list.size(); i++) {
+            ConfigurationSection cfg = null;
+            Object object = list.get(i);
+            if (object instanceof Map) {
+                cfg = temp.createSection(i + "", (Map<?, ?>) object);
+            } else if (object instanceof ConfigurationSection) {
+                cfg = (ConfigurationSection) object;
+            }
+
+            if (cfg != null) {
+                contents.add(lootManager().createLootObject(cfg));
+            } else {
+                throw new ConfigurationException("failed to find and load a list of rewards in " + this);
             }
         }
     }

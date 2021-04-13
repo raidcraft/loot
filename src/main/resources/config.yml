@@ -17,11 +17,11 @@ rarities:
     # wenn <1 oder nicht gesetzt können beliebig viele dieser rarität enthalten sein
     max: 1
 rewards:
-  money-2000:
-    type: money
+  example-cmd:
+    command: give %player% diamond 5
     # the name is formatted with the rarity and displayed
     # in the preview and chat broadcast
-    name: 2000c
+    name: 5x Diamonds
     # lore is only displayed in preview and result view
     # or under the item in holographic displays
     # not in the chat broadcast
@@ -44,8 +44,6 @@ rewards:
     # Ist z.B. nützlich um eine extra Tabelle immer droppen zu lassen,
     # aber in der referenzierten Tabelle eigene Wahrscheinlichkeiten zu definieren.
     exclude-from-random: false
-    # reward type specific config
-    money: 2000
   diamonds:
     type: item
     name: "%amount%x Diamanten"
@@ -61,8 +59,8 @@ loot-tables:
       mystic:
         max: 2
     rewards:
-      - reward: red_egg
-      - reward: green_egg
+      - reward: example-cmd
+      - reward: diamonds
   # in der vorschau werden alle items die gelootet werden können zusammen geschmissen
   # und eine chance basierend auf der chance und dem count berechnet
   example:
@@ -93,7 +91,7 @@ loot-tables:
       # reward - eins der vordefinierten rewards
       # table - eine der definierten loot tabellen
       # type - ein inline loot objekt
-      - reward: money-2000
+      - reward: example-cmd
         chance: 10
         # dieser reward kann maximal zwei mal vorkommen
         # wird count weggelassen kann der reward nur einmal vorkommen

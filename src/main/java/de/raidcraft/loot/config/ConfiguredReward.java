@@ -2,7 +2,6 @@ package de.raidcraft.loot.config;
 
 import com.google.common.base.Strings;
 import de.raidcraft.loot.*;
-import de.raidcraft.loot.util.ConfigUtil;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import lombok.extern.java.Log;
@@ -34,7 +33,7 @@ public class ConfiguredReward extends ConfiguredLootObject implements Reward {
     public Optional<RewardType> type() {
 
         LootManager lootManager = lootManager();
-        Optional<String> guessType = ConfigUtil.guessType(config());
+        Optional<String> guessType = RewardTypeResolver.resolveType(config());
         Optional<RewardType> reward = guessType
                 .flatMap(lootManager::lootType)
                 .map(rewardType -> {

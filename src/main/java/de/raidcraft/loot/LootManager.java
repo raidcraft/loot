@@ -341,6 +341,13 @@ public final class LootManager {
 
     private void loadLootTables() {
 
+        ConfigurationSection lootTableConfig = plugin.getConfig().getConfigurationSection("loot-tables");
+        if (lootTableConfig != null) {
+            for (String key : lootTableConfig.getKeys(false)) {
+                register(key, new ConfiguredLootTable(this, lootTableConfig.getConfigurationSection(key)));
+            }
+        }
+
         try {
             Path path = new File(plugin.getDataFolder(),
                     Objects.requireNonNull(plugin.getConfig().getString("loot-tables-path", "loot-tables"))
