@@ -1,10 +1,7 @@
 package de.raidcraft.loot.types;
 
 import com.google.common.base.Strings;
-import de.raidcraft.loot.ConfigurationException;
-import de.raidcraft.loot.IconProvider;
-import de.raidcraft.loot.RewardInfo;
-import de.raidcraft.loot.RewardType;
+import de.raidcraft.loot.*;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.bukkit.Material;
@@ -14,7 +11,7 @@ import org.bukkit.inventory.ItemStack;
 
 @Getter
 @Accessors(fluent = true)
-@RewardInfo("item")
+@RewardInfo(Constants.Types.ITEM)
 public class ItemReward implements RewardType, IconProvider {
 
     private Material item;

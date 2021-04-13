@@ -9,7 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
-@RewardInfo("command")
+@RewardInfo(Constants.Types.COMMAND)
 public class CommandReward implements RewardType {
 
     private String command;

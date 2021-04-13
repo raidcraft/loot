@@ -1,7 +1,6 @@
 package de.raidcraft.loot;
 
-import lombok.NonNull;
-import org.bukkit.configuration.ConfigurationSection;
+import de.raidcraft.loot.config.Rarity;
 
 import java.util.Collection;
 
@@ -47,6 +46,14 @@ public interface LootObject {
     boolean unique();
 
     /**
+     * Loot objects can be excluded from the random chance and only obtained via always drops.
+     * <p>Objects that are excluded from the random drop will not increase the required chance for other objects.
+     *
+     * @return true if this loot object can only be obtained from the always drop
+     */
+    boolean excludeFromRandom();
+
+    /**
      * Occurs before all the probabilities of all loot objects of the current result calculation are summed up together.
      * This is the moment to modify any settings immediately before a result is calculated.
      */
@@ -75,4 +82,12 @@ public interface LootObject {
      * @return a new merged instance of both loot objects
      */
     LootObject merge(LootObject lootObject);
+
+    /**
+     * The rarity of the loot object contains additional display information
+     * and the fallback chance of the object.
+     *
+     * @return the rarity of this loot object
+     */
+    Rarity rarity();
 }

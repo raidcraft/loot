@@ -1,6 +1,7 @@
 package de.raidcraft.loot;
 
 import com.google.common.base.Strings;
+import de.raidcraft.loot.config.ConfiguredLootObject;
 import de.raidcraft.loot.config.ConfiguredLootTable;
 import de.raidcraft.loot.config.ConfiguredReward;
 import de.raidcraft.loot.config.Rarity;
@@ -27,7 +28,7 @@ public final class LootManager {
 
     private final RCLoot plugin;
     private final Map<String, Rarity> rarities = new HashMap<>();
-    private final Map<String, RewardType.Registration<?>> lootTypes = new HashMap<>();
+    private final Map<String, RewardType.Registration<?>> rewardTypes = new HashMap<>();
     private final Map<String, LootObject> lootObjects = new HashMap<>();
     private final Map<String, LootTable> lootTables = new HashMap<>();
 
@@ -48,7 +49,7 @@ public final class LootManager {
     void load() {
 
         loadRarities();
-        loadLootObjects();
+        loadRewards();
         loadLootTables();
     }
 
@@ -76,14 +77,14 @@ public final class LootManager {
         }
 
         String identifier = typeClass.getAnnotation(RewardInfo.class).value().toLowerCase();
-        if (lootTypes.containsKey(identifier)) {
+        if (rewardTypes.containsKey(identifier)) {
             log.severe("unable to register reward type " + typeClass.getCanonicalName()
                     + "! A type with the same identifier " + identifier + " is already registered: "
-                    + lootTypes.get(identifier).typeClass().getCanonicalName()
+                    + rewardTypes.get(identifier).typeClass().getCanonicalName()
             );
         } else {
             RewardType.Registration<?> registration = new RewardType.Registration<>(identifier, typeClass, supplier);
-            lootTypes.put(identifier, registration);
+            rewardTypes.put(identifier, registration);
             log.info("registered reward type " + identifier + ": " + typeClass.getCanonicalName());
         }
     }
@@ -144,7 +145,7 @@ public final class LootManager {
 
         if (Strings.isNullOrEmpty(type)) return Optional.empty();
 
-        return Optional.ofNullable(lootTypes.get(type.toLowerCase()))
+        return Optional.ofNullable(rewardTypes.get(type.toLowerCase()))
                 .map(RewardType.Registration::supplier)
                 .map(Supplier::get);
     }
@@ -172,12 +173,12 @@ public final class LootManager {
     }
 
     /**
-     * Tries to find a loot object with the given identifier.
+     * Tries to find a reward with the given identifier.
      *
-     * @param identifier the identifier of the loot object
-     * @return the loot object or an empty optional
+     * @param identifier the identifier of the reward
+     * @return the reward or an empty optional
      */
-    public Optional<LootObject> lootObject(String identifier) {
+    public Optional<LootObject> reward(String identifier) {
 
         if (Strings.isNullOrEmpty(identifier)) return Optional.empty();
 
@@ -207,16 +208,16 @@ public final class LootManager {
         if (config.isSet("type")) {
             if ("table".equalsIgnoreCase(config.getString("type"))) {
                 return loadLootTable(config);
-            } else if (!lootTypes.containsKey(config.getString("type"))) {
-                throw new ConfigurationException("unknown loot type " + config.getString("type"));
+            } else if (!rewardTypes.containsKey(config.getString("type"))) {
+                throw new ConfigurationException("unknown reward type " + config.getString("type"));
             }
         } else if (config.isSet("reward")) {
-            Optional<LootObject> object = lootObject(config.getString("reward"));
-            if (object.isEmpty()) {
+            Optional<LootObject> reward = reward(config.getString("reward"));
+            if (reward.isEmpty()) {
                 throw new ConfigurationException("unknown reward " + config.getString("reward"));
             }
 
-            LootObject lootObject = object.get();
+            LootObject lootObject = reward.get();
             if (lootObject instanceof ConfiguredLootObject) {
                 return ((ConfiguredLootObject) lootObject).merge(config);
             }
@@ -265,14 +266,15 @@ public final class LootManager {
         ConfigurationSection rarities = plugin.getConfig().getConfigurationSection("rarities");
         if (rarities != null) {
             for (String key : rarities.getKeys(false)) {
-                Rarity rarity = new Rarity(rarities.getConfigurationSection(key));
-                this.rarities.put(key.toLowerCase(), rarity);
-                log.info("loaded rarity " + key + ": " + rarity.toString());
+                String id = key.toLowerCase();
+                Rarity rarity = new Rarity(id, rarities.getConfigurationSection(key));
+                this.rarities.put(id, rarity);
+                log.info("loaded rarity " + key + ": " + rarity);
             }
         }
     }
 
-    private void loadLootObjects() {
+    private void loadRewards() {
 
         final Map<String, ConfigurationSection> failedLoads = new HashMap<>();
         int count = 0;

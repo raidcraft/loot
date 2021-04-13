@@ -8,10 +8,7 @@ import lombok.extern.java.Log;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Log(topic = "RCLoot")
@@ -20,10 +17,11 @@ import java.util.stream.Collectors;
 public class ConfiguredLootTable extends ConfiguredLootObject implements LootTable {
 
     @Getter
-    private final Collection<LootObject> contents = new ArrayList<>();
+    private final List<LootObject> contents = new ArrayList<>();
 
-    private Collection<LootObject> uniqueDrops = new HashSet<>();
-    private Collection<Reward> cachedResult = new ArrayList<>();
+    private final Set<LootObject> uniqueDrops = new HashSet<>();
+    private final Map<Rarity, Integer> rarityCounts = new HashMap<>();
+    private LootResult cachedResult;
 
     public ConfiguredLootTable(LootManager lootManager, ConfigurationSection config) {
 
@@ -55,15 +53,15 @@ public class ConfiguredLootTable extends ConfiguredLootObject implements LootTab
     }
 
     @Override
-    public Collection<Reward> loot(Player player) {
+    public LootResult loot(Player player) {
 
         this.cachedResult = null;
 
-        return lastRewards(player);
+        return rewards(player);
     }
 
     @Override
-    public Collection<Reward> lastRewards(Player player) {
+    public LootResult rewards(Player player) {
 
         if (cachedResult != null) return cachedResult;
 
@@ -75,8 +73,9 @@ public class ConfiguredLootTable extends ConfiguredLootObject implements LootTab
 //        }
 
         // The return value, a list of hit objects
-        List<Reward> result = new ArrayList<>();
-        uniqueDrops = new HashSet<>();
+        final List<Reward> result = new ArrayList<>();
+        rarityCounts.clear();
+        uniqueDrops.clear();
 
         // Do the PreEvaluation on all objects contained in the current table
         // This is the moment where those objects might disable themselves.
@@ -87,7 +86,8 @@ public class ConfiguredLootTable extends ConfiguredLootObject implements LootTab
         // is set in the table! If there are 5 objects "always", those 5 will
         // drop, even if the count says only 3.
         contents().stream()
-                .filter(entry -> entry.always() && entry.enabled())
+                .filter(LootObject::enabled)
+                .filter(LootObject::always)
                 // TODO: implement requirements
 //                .filter(object -> getLootingPlayer().map(object::isMeetingAllRequirements).orElse(true))
                 .forEach(entry -> addToResult(result, entry));
@@ -101,19 +101,20 @@ public class ConfiguredLootTable extends ConfiguredLootObject implements LootTab
             {
                 // Find the objects, that can be hit now
                 // This is all objects, that are Enabled
-                Collection<LootObject> dropables = contents().stream()
-//                        .filter(object -> !object.isExcludeFromRandom())
+                Collection<LootObject> droppable = contents().stream()
+                        .filter(object -> !object.excludeFromRandom())
                         .filter(LootObject::enabled)
+                        .filter(this::hasNotReachedRarityCount)
                         // TODO: implement requirements
 //                        .filter(object -> getLootingPlayer().map(object::isMeetingAllRequirements).orElse(true))
                         .collect(Collectors.toList());
 
                 // This is the magic random number that will decide, which object is hit now
-                double hitValue = RandomUtil.getDoubleValue(dropables.stream().mapToDouble(LootObject::chance).sum());
+                double hitValue = RandomUtil.getDoubleValue(droppable.stream().mapToDouble(LootObject::chance).sum());
 
                 // Find out in a loop which object's probability hits the random value...
                 double runningValue = 0;
-                for (LootObject object : dropables)
+                for (LootObject object : droppable)
                 {
                     // Count up until we find the first item that exceeds the hit-value...
                     runningValue += object.chance();
@@ -133,8 +134,11 @@ public class ConfiguredLootTable extends ConfiguredLootObject implements LootTab
             object.onPostResultEvaluation(result);
         }
 
-        // Return the set now
-        this.cachedResult = List.copyOf(result);
+        // cache and return the result
+        this.cachedResult = LootResult.builder(this)
+                .player(player)
+                .rewards(result)
+                .build();
 
         return cachedResult;
     }
@@ -147,13 +151,27 @@ public class ConfiguredLootTable extends ConfiguredLootObject implements LootTab
                 uniqueDrops.add(object);
             }
 
+            rarityCounts.merge(object.rarity(), 1, Integer::sum);
+
             if (object instanceof LootTable) {
                 // recursively go through all loot tables and add their results
-                result.addAll(((LootTable) object).loot());
+                for (Reward reward : ((LootTable) object).loot().rewards()) {
+                    addToResult(result, reward);
+                }
             } else if (object instanceof Reward) {
                 result.add((Reward) object);
                 object.onHit();
             }
         }
+    }
+
+    private boolean hasNotReachedRarityCount(LootObject lootObject) {
+
+        Rarity rarity = lootObject.rarity();
+        int count = rarityCounts.getOrDefault(rarity, 0);
+
+        if (rarity.max() < 0) return true;
+
+        return count < rarity.max();
     }
 }

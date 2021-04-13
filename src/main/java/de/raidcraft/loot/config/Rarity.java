@@ -8,15 +8,29 @@ import lombok.NonNull;
 import lombok.experimental.Accessors;
 import org.bukkit.configuration.ConfigurationSection;
 
-@EqualsAndHashCode(of = "config")
+import java.util.UUID;
+
+@EqualsAndHashCode(of = "id")
 @Accessors(fluent = true)
 public class Rarity {
 
+    @Getter
+    private final String id;
     @Getter()
     private final ConfigurationSection config;
 
-    public Rarity(ConfigurationSection config) {
+    public Rarity(String id, ConfigurationSection config) {
+        this.id = id;
         this.config = config;
+    }
+
+    /**
+     * Creates a new rarity using a random id.
+     *
+     * @param config the config of the rarity
+     */
+    public Rarity(ConfigurationSection config) {
+        this(UUID.randomUUID().toString(), config);
     }
 
     public double chance() {

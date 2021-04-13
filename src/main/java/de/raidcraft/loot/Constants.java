@@ -20,4 +20,11 @@ public final class Constants {
         public static final String PREFIX = "rcloot.";
         public static final String ADMIN = PREFIX + "admin";
     }
+
+    public static final class Types {
+
+        public static final String COMMAND = "command";
+        public static final String ITEM = "item";
+        public static final String EMPTY = DEFAULT_TYPE;
+    }
 }

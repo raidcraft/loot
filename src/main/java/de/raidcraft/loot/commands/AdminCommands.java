@@ -6,16 +6,15 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Subcommand;
-import de.raidcraft.loot.*;
-import de.raidcraft.loot.util.ItemUtil;
+import de.raidcraft.loot.Constants;
+import de.raidcraft.loot.LootResult;
+import de.raidcraft.loot.LootTable;
+import de.raidcraft.loot.RCLoot;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-
-import java.util.Collection;
 
 @CommandAlias("lootadmin|rcloot:admin|rcla")
 @CommandPermission(Constants.Permissions.ADMIN)
@@ -44,14 +43,12 @@ public class AdminCommands extends BaseCommand {
     @CommandPermission(Constants.Permissions.ADMIN + ".loot")
     public void loot(LootTable table, Player player) {
 
-        Collection<Reward> result = table.loot(player);
+        LootResult result = table.loot(player);
         Inventory inventory = Bukkit.createInventory(player, InventoryType.CHEST);
 
-        ItemStack[] items = result.stream()
-                .map(ItemUtil::toDisplayItem)
-                .toArray(ItemStack[]::new);
-        inventory.setContents(items);
+        inventory.setContents(result.asDisplayItems());
 
         player.openInventory(inventory);
+        result.addTo(player);
     }
 }

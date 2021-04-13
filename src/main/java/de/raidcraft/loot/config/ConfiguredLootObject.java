@@ -1,6 +1,8 @@
-package de.raidcraft.loot;
+package de.raidcraft.loot.config;
 
-import de.raidcraft.loot.config.Rarity;
+import de.raidcraft.loot.ConfigurationException;
+import de.raidcraft.loot.LootManager;
+import de.raidcraft.loot.LootObject;
 import de.raidcraft.loot.util.ConfigUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -86,6 +88,43 @@ public abstract class ConfiguredLootObject implements LootObject {
         return this;
     }
 
+    public boolean excludeFromRandom() {
+
+        return config().getBoolean("exclude-from-random", false);
+    }
+
+    public ConfiguredLootObject excludeFromRandom(boolean exclude) {
+
+        config().set("exclude-from-random", exclude);
+
+        return this;
+    }
+
+    @Override
+    public Rarity rarity() {
+
+        try {
+            if (config().isConfigurationSection("rarity")) {
+                return new Rarity(config().getConfigurationSection("rarity"));
+            } else if (config().isSet("rarity") && config.isString("rarity")) {
+                return lootManager().rarity(config().getString("rarity"));
+            }
+        } catch (ConfigurationException e) {
+            log.severe("rarity " + config().getString("rarity") + " configured in " + this + " not found: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        log.warning("falling back to using default empty rarity in " + this);
+        return new Rarity(new MemoryConfiguration());
+    }
+
+    public ConfiguredLootObject rarity(String rarity) {
+
+        config().set("rarity", rarity);
+
+        return this;
+    }
+
     @Override
     public LootObject merge(LootObject lootObject) {
 
@@ -110,27 +149,4 @@ public abstract class ConfiguredLootObject implements LootObject {
     }
 
     protected abstract LootObject create(LootManager lootManager, ConfigurationSection config);
-
-    /**
-     * The rarity of the loot object contains additional display information
-     * and the fallback chance of the object.
-     *
-     * @return the rarity of this loot object
-     */
-    public Rarity rarity() {
-
-        try {
-            if (config().isConfigurationSection("rarity")) {
-                return new Rarity(config().getConfigurationSection("rarity"));
-            } else if (config().isSet("rarity") && config.isString("rarity")) {
-                return lootManager().rarity(config().getString("rarity"));
-            }
-        } catch (ConfigurationException e) {
-            log.severe("rarity " + config().getString("rarity") + " configured in " + toString() + " not found: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        log.warning("falling back to using default empty rarity in " + toString());
-        return new Rarity(new MemoryConfiguration());
-    }
 }

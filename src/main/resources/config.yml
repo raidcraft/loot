@@ -3,3 +3,115 @@ database:
   password: sa
   driver: h2
   url: jdbc:h2:~/loot.db
+rarities:
+  common:
+    # die default chance die alle loot objekte mit dieser rarität erhalten
+    chance: 20
+    name: "&f&lGewöhnlich&r"
+    format: "&f{REWARD_NAME}&r"
+  mystic:
+    chance: 0.01
+    name: "&6Mystisch&r"
+    format: "&6{REWARD_NAME}&r"
+    # maximal ein mystisches loot objekt ist im ergebnis enthalten
+    # wenn <1 oder nicht gesetzt können beliebig viele dieser rarität enthalten sein
+    max: 1
+rewards:
+  money-2000:
+    type: money
+    # the name is formatted with the rarity and displayed
+    # in the preview and chat broadcast
+    name: 2000c
+    # lore is only displayed in preview and result view
+    # or under the item in holographic displays
+    # not in the chat broadcast
+    lore: >-
+      &6a Super duper money!
+      eaz multi line lore...
+    # not required if rarity is set but can overwrite rarity chance
+    # chance: 25
+    rarity: common
+    # Einfacher Schalter um das Loot-Objekt zu deaktivieren,
+    # ohne es aus der Config löschen zu müssen.
+    enabled: true
+    # Wenn true wird das Objekt dem Ergebnis immer hinzugefügt, egal was für eine Wahrscheinlichkeit oder Count konfiguriert ist.
+    # Wenn die Objekte mit always den Count überschreiten werden alle always Objekte hinzugefügt.
+    always: false
+    # Das Objekt wird nur ein einziges Mal dem Ergebnis hinzugefügt.
+    unique: false
+    # Zählt die Wahrscheinlichkeit der Tabelle nicht mit in die Gesamtgewichtung.
+    # Items können nur durch das always Flag droppen.
+    # Ist z.B. nützlich um eine extra Tabelle immer droppen zu lassen,
+    # aber in der referenzierten Tabelle eigene Wahrscheinlichkeiten zu definieren.
+    exclude-from-random: false
+    # reward type specific config
+    money: 2000
+  diamonds:
+    type: item
+    name: "%amount%x Diamanten"
+    chance: 0.05
+    # the actual amount can be specified by the consuming loot table
+    item: 'minecraft:diamond'
+
+loot-tables:
+  eastereggs:
+    count: 5
+    rarities:
+      # erlaubt das überschreiben von einzelnen raritäten nur für diesen loot baum
+      mystic:
+        max: 2
+    rewards:
+      - reward: red_egg
+      - reward: green_egg
+  # in der vorschau werden alle items die gelootet werden können zusammen geschmissen
+  # und eine chance basierend auf der chance und dem count berechnet
+  example:
+    # Optionale Metadaten die im Loot Admin Menü angezeigt werden.
+    # Macht es Quest Scriptern und Entwicklern leichter Loot-Tabellen auszuwählen.
+    # Alle Daten sind optional und müssen nicht angegeben werden.
+    meta:
+      # Ein prägnanter Name für die Loot-Tabelle,
+      # z.B. Äpfel Ankanor
+      name: 'Optionaler Anzeige Name'
+      # Eine kurze Beschreibung wozu die Loot-Tabelle dienen soll,
+      # z.B. "Äpfel die bei Bäumen in Ankanor liegen oder dran hängen."
+      desc: 'Beschreibung der Loot-Tabelle'
+      # Das Icon im Loot Admin Menü.
+      icon: 'minecraft:apple'
+    # Kann weggelassen werden da es der default ist.
+    type: table
+    # kann man auf false schalten um die tabelle zu deaktivieren
+    enabled: true
+    # auf true setzen um dem spieler die tatsächliche chance (berechnet anhand aller loot objekte) anzuzeigen
+    show-chance: false
+    # Der count der Tabelle die am höchsten definiert ist zählt.
+    # Sobald diese Anzahl an Items erreicht ist wird nicht weiter gelootet.
+    count: 1
+    # Die entries Sektion kann weitere Loot-Tabellen und Objekte enthalten.
+    rewards:
+      # es gibt die folgenden reward types:
+      # reward - eins der vordefinierten rewards
+      # table - eine der definierten loot tabellen
+      # type - ein inline loot objekt
+      - reward: money-2000
+        chance: 10
+        # dieser reward kann maximal zwei mal vorkommen
+        # wird count weggelassen kann der reward nur einmal vorkommen
+        # ein count von 2 verdoppelt quasi die chance dieses loot objekts
+        count: 2
+      - reward: diamonds
+        always: true
+        # !Wichtig! amount ist etwas anderes als count
+        # obwohl der Spieler 12 Diamanten bekommt zählt das nur
+        # als 1 count da es ein einziges loot objekt ist
+        amount: 12
+      - item: coal_ore
+        chance: 33
+        count: 1
+      - table: eastereggs
+        chance: 33
+        # überschreibt den counter der loot-tabelle von oben (5)
+        # der counter bezieht sich immer auf die gesamte anzahl der loot objekte
+        # ab diesem loot-baum
+        # ist der count der "root" loot tabelle erreicht wird nicht weiter gelootet
+        count: 1

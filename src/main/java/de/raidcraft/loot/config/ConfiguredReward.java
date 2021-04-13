@@ -2,6 +2,7 @@ package de.raidcraft.loot.config;
 
 import com.google.common.base.Strings;
 import de.raidcraft.loot.*;
+import de.raidcraft.loot.util.ConfigUtil;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import lombok.extern.java.Log;
@@ -10,10 +11,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-
-import static de.raidcraft.loot.Constants.DEFAULT_TYPE;
 
 @Log(topic = "RCLoot")
 @Accessors(fluent = true)
@@ -35,19 +33,24 @@ public class ConfiguredReward extends ConfiguredLootObject implements Reward {
     @Override
     public Optional<RewardType> type() {
 
-        String type = config().getString("type", DEFAULT_TYPE);
-        return lootManager().lootType(type)
-                .map(lootType -> {
+        LootManager lootManager = lootManager();
+        Optional<String> guessType = ConfigUtil.guessType(config());
+        Optional<RewardType> reward = guessType
+                .flatMap(lootManager::lootType)
+                .map(rewardType -> {
                     try {
-                        return lootType.load(Objects.requireNonNullElse(
-                                config().getConfigurationSection("with"),
-                                config().createSection("with"))
-                        );
+                        return rewardType.load(config());
                     } catch (ConfigurationException e) {
-                        log.severe("failed to load reward type " + type + " in reward " + toString() + ": " + e.getMessage());
+                        log.severe("failed to load reward type " + rewardType + " in reward " + this + ": " + e.getMessage());
                         return null;
                     }
                 });
+
+        if (reward.isEmpty()) {
+            log.warning("empty or unknown reward type '" + guessType.orElse(null) + "' in: " + this);
+        }
+
+        return reward;
     }
 
     public ConfiguredLootObject type(String type) {

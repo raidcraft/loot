@@ -2,8 +2,6 @@ package de.raidcraft.loot;
 
 import org.bukkit.entity.Player;
 
-import java.util.Collection;
-
 public interface Lootable {
 
     /**
@@ -14,14 +12,14 @@ public interface Lootable {
      *
      * @return the last cached result of the loot table
      */
-    Collection<Reward> lastRewards(Player player);
+    LootResult rewards(Player player);
 
     /**
      * Will reset the last cached result and generate a new result set.
      *
      * @return fresh random result
      */
-    default Collection<Reward> loot() {
+    default LootResult loot() {
 
         return loot(null);
     }
@@ -33,5 +31,5 @@ public interface Lootable {
      * @param player that is looting
      * @return random loot with evaluated requirements
      */
-    Collection<Reward> loot(Player player);
+    LootResult loot(Player player);
 }

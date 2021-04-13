@@ -1,10 +1,12 @@
 package de.raidcraft.loot.util;
 
+import de.raidcraft.loot.Constants;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class ConfigUtil {
 
@@ -48,5 +50,27 @@ public class ConfigUtil {
         }
 
         return config;
+    }
+
+    /**
+     * Guesses the reward type of the given config section and returns the type identifier of the reward.
+     * <p>This method looks for keys inside the config and then infers the type.
+     * e.g.: a {@code item:} or {@code command:} key lets us assume the relevant type.
+     * <p>Only works for built-in types in the de.raidcraft.loot.types package.
+     *
+     * @param config the config to use for the type lookup. may be null.
+     * @return the type of it could be guessed or an empty optional otherwise
+     */
+    public static Optional<String> guessType(ConfigurationSection config) {
+
+        if (config == null) return Optional.empty();
+
+        if (config.isSet("item")) {
+            return Optional.of(Constants.Types.ITEM);
+        } else if (config.isSet("command")) {
+            return Optional.of(Constants.Types.COMMAND);
+        }
+
+        return Optional.empty();
     }
 }
